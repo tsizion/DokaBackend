@@ -20,14 +20,14 @@ app.use(bodyParser.json());
 
 connectDB();
 
-app.use("/api/v1/donor", require("./donors/routers/donorRoutes"));
-app.use("/api/v1/user", require("./campaign creators,/routers/userRouter"));
-app.use("/api/v1/category", require("./Campaign/routers/categoryRouters"));
-app.use("/api/v1/campaign", require("./Campaign/routers/CampaignRouters"));
-app.use("/api/v1/donation", require("./donation/routers/doantionRouters"));
-app.use("/api/v1/admin", require("./admin/routers/adminRouter"));
-app.use("/api/v1/login", require("./Login/Router/Login"));
-app.use("/api/v1/order", require("./donation/routers/order"));
+app.use("/api/v1/user", require("./User/routers/userRouter"));
+app.use("/api/v1/category", require("./Product/routers/categoryRouters"));
+app.use("/api/v1/product", require("./Product/routers/productRouter"));
+app.use("/api/v1/order", require("./order/routers/orderRouter"));
+app.use("/api/v1/cart", require("./order/routers/cartRouter"));
+app.use("/api/v1/delivery", require("./order/routers/deliveryRouter.js"));
+app.use("/api/v1/admin", require("./admin/routers/adminRouter.js"));
+app.use("/api/v1/login", require("./Login/Router/Login.js"));
 
 // Default route
 app.get("/", (req, res) => {

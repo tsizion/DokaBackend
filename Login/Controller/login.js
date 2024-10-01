@@ -1,7 +1,7 @@
 const AppError = require("../../ErrorHandlers/appError");
 const authUtils = require("../../Utils/authUtils");
 const catchAsync = require("../../ErrorHandlers/catchAsync");
-const User = require("../../campaign creators,/models/usermodel");
+const User = require("../../User/models/usermodel");
 const Admin = require("../../admin/models/adminModel");
 
 exports.Login = catchAsync(async (req, res, next) => {

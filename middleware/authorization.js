@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 const AppError = require("../ErrorHandlers/appError");
-const User = require("../campaign creators,/models/usermodel");
+const User = require("../User/models/usermodel");
 const Admin = require("../admin/models/adminModel");
 
 // Middleware to protect routes for user authentication
