@@ -28,6 +28,7 @@ app.use("/api/v1/cart", require("./order/routers/cartRouter"));
 app.use("/api/v1/delivery", require("./order/routers/deliveryRouter.js"));
 app.use("/api/v1/admin", require("./admin/routers/adminRouter.js"));
 app.use("/api/v1/login", require("./Login/Router/Login.js"));
+app.use("/api/v1/deletedUser", require("./User/routers/deletedUserRouter"));
 
 // Default route
 app.get("/", (req, res) => {

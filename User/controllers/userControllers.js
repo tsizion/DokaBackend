@@ -2,6 +2,7 @@ const { validationResult } = require("express-validator");
 const AppError = require("../../ErrorHandlers/appError");
 const catchAsync = require("../../ErrorHandlers/catchAsync");
 const User = require("../models/usermodel");
+const DeletedUser = require("../models/deletedUser");
 
 // Create a new user
 exports.Create = catchAsync(async (req, res, next) => {
@@ -49,18 +50,33 @@ exports.ReadOne = catchAsync(async (req, res, next) => {
     },
   });
 });
+exports.ReadMe = catchAsync(async (req, res, next) => {
+  // The user's ID is already attached to req.user by the protectUser middleware
+  const user = await User.findById(req.user);
 
-// Update a user
+  if (!user) {
+    return next(new AppError("User not found", 404));
+  }
+
+  res.status(200).json({
+    status: "success",
+    data: {
+      user,
+    },
+  });
+});
+
 exports.Update = catchAsync(async (req, res, next) => {
-  const { id } = req.params;
   const updateFields = req.body;
 
+  // Ensure validation is done
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return next(new AppError("Validation failed", 400, errors.array()));
   }
 
-  const updatedUser = await User.findByIdAndUpdate(id, updateFields, {
+  // Find and update the authenticated user by their ID from the middleware
+  const updatedUser = await User.findByIdAndUpdate(req.user, updateFields, {
     new: true, // Return the updated document
     runValidators: true, // Ensure the updated fields pass the schema validators
   });
@@ -79,17 +95,62 @@ exports.Update = catchAsync(async (req, res, next) => {
 
 // Delete a user by ID
 exports.Delete = catchAsync(async (req, res, next) => {
+  const user = await User.findById(req.user);
+
+  if (!user) {
+    return next(new AppError("User not found", 404));
+  }
+
+  // Use the provided reason or a default message
+  const deletionReason = req.body.deletionReason || "No reason provided";
+
+  // Save user data to DeletedUser collection with a custom deletion reason
+  await DeletedUser.create({
+    FullName: user.FullName,
+    email: user.email,
+    phoneNumber: user.phoneNumber,
+    address: user.address,
+    deletionReason: deletionReason,
+  });
+
+  // Delete the user from the User collection
+  await User.findByIdAndDelete(req.user._id);
+
+  res.status(200).json({
+    status: "success",
+    message: "User successfully deleted",
+    data: null,
+  });
+});
+exports.DeleteByAdmin = catchAsync(async (req, res, next) => {
+  // Get the user by ID from the request parameters (since admin can delete any user)
   const user = await User.findById(req.params.id);
 
   if (!user) {
     return next(new AppError("User not found", 404));
   }
 
+  // Use the provided reason or a default message
+  const deletionReason = req.body.deletionReason || "Deleted by admin";
+
+  // Save user data to DeletedUser collection with the admin information
+  await DeletedUser.create({
+    FullName: user.FullName,
+    email: user.email,
+    phoneNumber: user.phoneNumber,
+    address: user.address,
+    deletionReason: deletionReason,
+    deletedByAdmin: true,
+    adminId: req.admin.id, // Admin's ID from middleware
+    adminName: `${req.admin.firstName} ${req.admin.lastName}`, // Admin's full name from middleware
+  });
+
+  // Delete the user from the User collection
   await User.findByIdAndDelete(req.params.id);
 
   res.status(200).json({
     status: "success",
-    message: "User successfully deleted",
+    message: "User successfully deleted by admin",
     data: null,
   });
 });

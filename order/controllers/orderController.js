@@ -11,7 +11,10 @@ exports.Create = catchAsync(async (req, res, next) => {
     return next(new AppError("Validation failed", 400, errors.array()));
   }
 
-  const { userId, products } = req.body;
+  // Get the userId from the request object (from the middleware)
+  const userId = req.user; // Assuming the middleware attaches the user object
+  const { products } = req.body;
+  console.log(userId);
 
   // Check if products exist and calculate total price
   let totalPrice = 0;
@@ -46,7 +49,7 @@ exports.Create = catchAsync(async (req, res, next) => {
 
   // Create the order
   const newOrder = await Order.create({
-    userId,
+    userId, // Use the userId from the req object
     products: updatedProducts,
     totalPrice,
     paymentStatus: req.body.paymentStatus || "Pending",
@@ -63,7 +66,13 @@ exports.Create = catchAsync(async (req, res, next) => {
 
 // Read all orders
 exports.ReadAll = catchAsync(async (req, res, next) => {
-  const orders = await Order.find().populate("userId products.productId");
+  const orders = await Order.find()
+    .select(
+      "userId products totalPrice paymentStatus deliveryStatus createdAt updatedAt"
+    ) // Select only the necessary fields
+    .populate({
+      path: "products.productId", // Populate full product details
+    });
 
   res.status(200).json({
     status: "success",
@@ -93,6 +102,48 @@ exports.ReadOne = catchAsync(async (req, res, next) => {
 });
 
 // Update an order's delivery status
+exports.MyOrders = catchAsync(async (req, res, next) => {
+  const userId = req.user; // Get the user ID from the logged-in user (attached by middleware)
+
+  // Find all orders for the logged-in user
+  const orders = await Order.find({ userId }).populate("products.productId");
+
+  // If no orders are found, send a 404 error
+  if (!orders || orders.length === 0) {
+    return next(new AppError("No orders found for this user", 404));
+  }
+
+  // Return the user's orders
+  res.status(200).json({
+    status: "success",
+    results: orders.length,
+    data: {
+      orders,
+    },
+  });
+});
+exports.MySingleOrder = catchAsync(async (req, res, next) => {
+  const userId = req.user; // Get the user ID from the logged-in user (middleware)
+  const { id } = req.params; // Get the order ID from the route parameters
+
+  // Find the order by ID and check if it belongs to the logged-in user
+  const order = await Order.findOne({ _id: id, userId }).populate(
+    "products.productId"
+  );
+
+  // Check if the order exists and belongs to the logged-in user
+  if (!order) {
+    return next(new AppError("Order not found or you are not authorized", 404));
+  }
+
+  // If the order is found and belongs to the user, return it
+  res.status(200).json({
+    status: "success",
+    data: {
+      order,
+    },
+  });
+});
 
 // Update delivery status and/or payment status
 exports.UpdateDeliveryStatus = catchAsync(async (req, res, next) => {

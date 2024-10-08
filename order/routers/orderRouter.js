@@ -6,11 +6,17 @@ const {
   ReadOne,
   UpdateDeliveryStatus,
   Delete,
+  MyOrders,
+  MySingleOrder,
 } = require("../controllers/orderController");
+const { protectUser, protectAdmin } = require("../../middleware/authorization");
 
-router.post("/", Create);
+router.post("/", protectUser, Create);
 
 router.get("/", ReadAll);
+router.get("/MyOrders", protectUser, MyOrders);
+router.get("/MyOrders/:id", protectUser, MySingleOrder);
+
 router.get("/:id", ReadOne);
 router.patch("/:id/UpdateStatus", UpdateDeliveryStatus);
 router.delete("/:id", Delete);

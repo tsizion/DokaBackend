@@ -36,7 +36,7 @@ exports.protectUser = async (req, res, next) => {
     }
 
     // Attach the user to the request object for use in subsequent middleware or route handlers
-    req.user = user;
+    req.user = user._id;
 
     next();
   } catch (error) {
@@ -50,6 +50,7 @@ exports.protectUser = async (req, res, next) => {
 };
 
 // Middleware to protect routes for admin authentication
+
 exports.protectAdmin = async (req, res, next) => {
   try {
     let token;
@@ -76,18 +77,24 @@ exports.protectAdmin = async (req, res, next) => {
     const adminId = decoded.id;
 
     // Find the admin using the retrieved id
-    const admin = await Admin.findById(adminId);
+    const admin = await Admin.findById(adminId).select("+firstName +lastName"); // Select firstName and lastName
+
     if (!admin) {
       return next(new AppError("Admin not found.", 404));
     }
 
-    // Check if the user has the 'Admin' role
+    // Check if the user has the 'Admin' or 'Super Admin' role
     if (admin.role !== "Admin" && admin.role !== "Super Admin") {
       return next(new AppError("User does not have admin rights.", 403));
     }
 
-    // Attach the admin to the request object for use in subsequent middleware or route handlers
-    req.admin = admin;
+    // Attach the admin object with firstName and lastName to request object
+    req.admin = {
+      id: admin._id,
+      firstName: admin.firstName,
+      lastName: admin.lastName,
+      role: admin.role,
+    };
 
     next();
   } catch (error) {
