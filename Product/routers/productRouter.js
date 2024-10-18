@@ -9,8 +9,8 @@ const {
   BulkCreate,
 } = require("../controllers/productControllers");
 const { protectAdmin } = require("../../middleware/authorization");
-router.post("/", protectAdmin, Create);
-router.post("/bulk", protectAdmin, BulkCreate);
+router.post("/", Create);
+router.post("/bulk", BulkCreate);
 router.get("/", ReadAll);
 router.get("/:id", ReadOne);
 router.patch("/:id", protectAdmin, Update);

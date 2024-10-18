@@ -4,7 +4,6 @@ const catchAsync = require("../../ErrorHandlers/catchAsync");
 const Product = require("../models/productModel");
 const Category = require("../models/category");
 
-// Create a new product
 exports.Create = catchAsync(async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -13,8 +12,10 @@ exports.Create = catchAsync(async (req, res, next) => {
 
   const { category } = req.body;
 
-  // Check if the category ID exists
-  const categoryExists = await Category.findById(category);
+  // Check if the category name exists (case insensitive)
+  const categoryExists = await Category.findOne({
+    name: { $regex: new RegExp(`^${category}$`, "i") },
+  });
   if (!categoryExists) {
     return next(new AppError("Category not found", 404));
   }
@@ -29,6 +30,7 @@ exports.Create = catchAsync(async (req, res, next) => {
     },
   });
 });
+
 // Bulk create products
 exports.BulkCreate = catchAsync(async (req, res, next) => {
   const products = req.body; // Expecting an array of product objects
@@ -40,13 +42,17 @@ exports.BulkCreate = catchAsync(async (req, res, next) => {
     );
   }
 
-  // Check if the category IDs provided exist
-  const categoryIds = products.map((product) => product.category);
-  const uniqueCategoryIds = [...new Set(categoryIds)];
+  // Check if the category names provided exist (case insensitive)
+  const categoryNames = products.map((product) => product.category);
+  const uniqueCategoryNames = [...new Set(categoryNames)];
 
-  const categories = await Category.find({ _id: { $in: uniqueCategoryIds } });
+  const categories = await Category.find({
+    name: {
+      $in: uniqueCategoryNames.map((name) => new RegExp(`^${name}$`, "i")),
+    },
+  });
 
-  if (categories.length !== uniqueCategoryIds.length) {
+  if (categories.length !== uniqueCategoryNames.length) {
     return next(new AppError("One or more categories not found", 404));
   }
 
