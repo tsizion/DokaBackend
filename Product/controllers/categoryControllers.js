@@ -104,6 +104,26 @@ exports.Delete = catchAsync(async (req, res, next) => {
   });
 });
 
+
+// Delete all categories controller
+exports.DeleteAll = catchAsync(async (req, res, next) => {
+  // Delete all categories
+  const result = await Category.deleteMany({});
+
+  // Check if any categories were deleted
+  if (result.deletedCount === 0) {
+    return next(new AppError("No categories found to delete", 404));
+  }
+
+  // Respond with a success message
+  res.status(200).json({
+    status: "success",
+    message: `Successfully deleted all categories`,
+    data: null,
+  });
+});
+
+
 // Bulk create categories
 exports.BulkCreate = catchAsync(async (req, res, next) => {
   const categories = req.body; // Expecting an array of category objects

@@ -11,7 +11,9 @@ const {
 const { protectAdmin } = require("../../middleware/authorization");
 router.post("/", Create);
 router.post("/bulk", BulkCreate);
+
 router.get("/", ReadAll);
+
 router.get("/:id", ReadOne);
 router.patch("/:id", protectAdmin, Update);
 router.delete("/:id", Delete);

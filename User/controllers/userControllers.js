@@ -3,6 +3,7 @@ const AppError = require("../../ErrorHandlers/appError");
 const catchAsync = require("../../ErrorHandlers/catchAsync");
 const User = require("../models/usermodel");
 const DeletedUser = require("../models/deletedUser");
+const authUtils = require("../../Utils/authUtils");
 
 // Create a new user
 exports.Create = catchAsync(async (req, res, next) => {
@@ -14,8 +15,12 @@ exports.Create = catchAsync(async (req, res, next) => {
   // Create the user
   const newUser = await User.create(req.body);
 
+  // Generate a token for the new user
+  const token = await authUtils.signToken(newUser._id);
+
   res.status(201).json({
     status: "success",
+    token, // Include the token in the response
     data: {
       user: newUser,
     },
