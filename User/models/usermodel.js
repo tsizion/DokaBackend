@@ -10,7 +10,9 @@ const UserSchema = new mongoose.Schema(
     email: {
       type: String,
       unique: true,
-      required: true,
+      required: function () {
+        return !this.phoneNumber; // If phoneNumber is not provided, email is required
+      },
     },
     password: {
       type: String,
@@ -19,7 +21,9 @@ const UserSchema = new mongoose.Schema(
     phoneNumber: {
       type: String,
       unique: true,
-      required: true,
+      required: function () {
+        return !this.email; // If email is not provided, phoneNumber is required
+      },
     },
     address: {
       type: [String], // Array of addresses
